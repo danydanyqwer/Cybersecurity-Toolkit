@@ -132,4 +132,4 @@ Proiectul a fost dezvoltat de la zero, având ca punct de pornire conceptele teo
 #### **Link-uri obligatorii pentru transparență și controlul codului:**
 
 * **Link share-uibil LLM (Claude AI):** [https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae](https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae)
-* **URL GitHub Proiect:** *[[Se va introduce link-ul către repository-ul tău de GitHub aici]](https://github.com/danydanyqwer/Cybersecurity-Toolkit)*
+* **URL GitHub Proiect:** *[(https://github.com/danydanyqwer/Cybersecurity-Toolkit)](https://github.com/danydanyqwer/Cybersecurity-Toolkit)*
