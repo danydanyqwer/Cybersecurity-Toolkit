@@ -151,15 +151,4 @@ Proiectul a fost dezvoltat de la zero, având ca punct de pornire conceptele teo
 #### **Link-uri obligatorii pentru transparență și controlul codului:**
 
 * **Link share-uibil LLM (Claude AI):** [https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae](https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae)
-* **URL GitHub Proiect:** *[Se va introduce link-ul către repository-ul tău de GitHub aici]*
-
----
-
-### Ce trebuie să faci tu acum:
-
-1. Creează un fișier numit `README.md` în folderul proiectului tău (lângă `app.py`).
-2. Copiază tot textul de mai sus în el.
-3. Adaugă link-ul tău de GitHub în ultimul rând al documentului.
-4. Deschide aplicația, fă cele 4 screenshot-uri menționate la punctul 4 și pune-le în același folder sau inserează-le în varianta finală de Word/PDF dacă decizi să o printezi/salvezi separat.
-
-Documentația este completă, atinge toate punctele din barem și justifică de ce proiectul tău este complex și merită o notă maximă!
+* **URL GitHub Proiect:** *[[Se va introduce link-ul către repository-ul tău de GitHub aici]](https://github.com/danydanyqwer/Cybersecurity-Toolkit)*
