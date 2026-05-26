@@ -1,15 +1,11 @@
 """
-Security Toolkit - Flask Web Application
+Skybreak SOC - Flask Web Application
 Combines: FIM, Email/URL Checker (VirusTotal), Port Scanner
 """
 
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import sys
-
-__author__ = "Dan Grigorescu"
-__version__ = "1.0.0"
-__project__ = "Greuceanu_SOC"
 
 # Add modules to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'modules'))
@@ -91,11 +87,13 @@ def port_scan():
     mode = data.get('mode', 'common')       # 'common' | 'range' | 'both'
     port_range = data.get('range', '1-1024')
     timeout = float(data.get('timeout', 0.5))
+    engine = data.get('engine', 'sockets')   # Preluăm motorul ales din frontend
 
     if not host:
         return jsonify({'error': 'Host invalid'}), 400
 
     scanner = PortScanner(host, timeout=timeout)
+    scanner.engine = engine                  # Injectăm motorul în clasa PortScanner
 
     if mode == 'common':
         result = scanner.scan_common()
