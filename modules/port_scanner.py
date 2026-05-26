@@ -1,7 +1,7 @@
 """
 Port Scanner Module
 Scaneaza porturile unui host folosind socket Python + subprocess (nmap daca e disponibil)
-Include modul de lookup CVE via NIST NVD API.
+Include modul de lookup CVE via NIST NVD API si selector din frontend.
 """
 
 import socket
@@ -10,6 +10,7 @@ import concurrent.futures
 import datetime
 import time
 import requests
+import shutil
 
 COMMON_PORTS = [
     21, 22, 23, 25, 53, 67, 68, 69, 80, 110, 111, 119, 123, 135, 137,
@@ -45,6 +46,7 @@ class PortScanner:
     def __init__(self, host: str, timeout: float = 0.5):
         self.host = host
         self.timeout = timeout
+        self.engine = 'sockets'  # Implicit
         self.ip = None
 
     def _resolve_host(self) -> str:
@@ -87,6 +89,7 @@ class PortScanner:
         return []
 
     def _scan_port(self, port: int) -> dict | None:
+        """Scanare simplă pe bază de fire de execuție"""
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(self.timeout)
@@ -96,33 +99,37 @@ class PortScanner:
                 service = SERVICE_NAMES.get(port, 'Unknown')
                 risk = 'HIGH' if port in HIGH_RISK_PORTS else ('MEDIUM' if port in MEDIUM_RISK_PORTS else 'LOW')
                 
-                # Fetch CVEs dynamically
-                cves = self._lookup_cve(service)
-                
                 return {
                     'port': port,
                     'state': 'open',
                     'service': service,
                     'risk': risk,
                     'protocol': 'tcp',
-                    'cves': cves
+                    'cves': [] # Motorul de Sockets nu aduce CVE-uri din lipsă de scanare de versiune complexă
                 }
         except (socket.error, OSError):
             pass
         return None
 
     def _nmap_scan(self, ports: list) -> list:
-        port_str = ','.join(map(str, ports[:100]))
+        """Scanare nativă folosind utilitarul NMAP din sistem"""
+        if len(ports) > 2000:
+            port_str = f"{ports[0]}-{ports[-1]}"
+        else:
+            port_str = ','.join(map(str, ports))
+            
         try:
+            # Opțiunea -sV rulează detecția avansată de versiuni în rețea
             cmd = ['nmap', '-sV', '--open', '-p', port_str, '-T4', self.host]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
             if result.returncode == 0:
                 return self._parse_nmap_output(result.stdout)
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             pass
         return []
 
     def _parse_nmap_output(self, output: str) -> list:
+        """Parsează string-ul generat de Nmap CLI și rulează CVE lookup pe el"""
         open_ports = []
         for line in output.splitlines():
             line = line.strip()
@@ -130,9 +137,10 @@ class PortScanner:
                 parts = line.split()
                 if len(parts) >= 3:
                     port = int(parts[0].split('/')[0])
-                    service = parts[2] if len(parts) > 2 else SERVICE_NAMES.get(port, 'Unknown')
+                    service = " ".join(parts[2:]) 
                     risk = 'HIGH' if port in HIGH_RISK_PORTS else ('MEDIUM' if port in MEDIUM_RISK_PORTS else 'LOW')
                     
+                    # Interogare NIST live pe baza versiunii detaliate scoase de NMAP
                     cves = self._lookup_cve(service)
                     
                     open_ports.append({
@@ -153,6 +161,15 @@ class PortScanner:
                 if result:
                     open_ports.append(result)
         return sorted(open_ports, key=lambda x: x['port'])
+
+    def _execute_scan(self, ports: list):
+        """Redirecționează execuția în funcție de opțiunea utilizatorului"""
+        if self.engine == 'nmap':
+            if not shutil.which('nmap'):
+                return "EROARE: Utilitarul Nmap nu este instalat pe acest sistem! Selectează motorul Python Sockets."
+            return self._nmap_scan(ports)
+        else:
+            return self._scan_ports_parallel(ports)
 
     def _build_result(self, open_ports: list, scanned_count: int, mode: str, duration: float) -> dict:
         high = [p for p in open_ports if p['risk'] == 'HIGH']
@@ -186,7 +203,10 @@ class PortScanner:
         ip = self._resolve_host()
         if not ip: return {'error': f'Nu pot rezolva host-ul: {self.host}'}
         start = time.time()
-        open_ports = self._scan_ports_parallel(COMMON_PORTS)
+        
+        open_ports = self._execute_scan(COMMON_PORTS)
+        if isinstance(open_ports, str): return {'error': open_ports}
+            
         duration = time.time() - start
         return self._build_result(open_ports, len(COMMON_PORTS), 'common_ports', duration)
 
@@ -207,7 +227,10 @@ class PortScanner:
         if len(ports) > 10000: return {'error': 'Range prea mare (max 10000 porturi)'}
 
         start = time.time()
-        open_ports = self._scan_ports_parallel(ports)
+        
+        open_ports = self._execute_scan(ports)
+        if isinstance(open_ports, str): return {'error': open_ports}
+            
         duration = time.time() - start
         return self._build_result(open_ports, len(ports), f'range:{port_range}', duration)
 
@@ -228,6 +251,9 @@ class PortScanner:
         if len(all_ports) > 15000: all_ports = all_ports[:15000]
 
         start = time.time()
-        open_ports = self._scan_ports_parallel(all_ports)
+        
+        open_ports = self._execute_scan(all_ports)
+        if isinstance(open_ports, str): return {'error': open_ports}
+            
         duration = time.time() - start
         return self._build_result(open_ports, len(all_ports), f'common+range:{port_range}', duration)
