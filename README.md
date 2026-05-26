@@ -144,4 +144,4 @@ Alerta telegram generata de modulul F.I.M.
 #### **Link-uri obligatorii pentru transparență și controlul codului:**
 
 * **Link share-uibil LLM (Claude AI):** [https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae](https://claude.ai/share/81697c9b-0cea-4176-b188-d6cca79dd5ae)
-* **URL GitHub Proiect:** *[(https://github.com/danydanyqwer/Cybersecurity-Toolkit)](https://github.com/danydanyqwer/Cybersecurity-Toolkit)*
+* **URL GitHub Proiect:** *[https://github.com/danydanyqwer/skybreak_soc)](https://github.com/danydanyqwer/skybreak_soc)*
